@@ -20,6 +20,8 @@ struct COffsets
 		int m_hObserverTarget;
 		int m_hViewModel;
 		int m_szLastPlaceName;
+		int m_angRotation;
+		int m_flLowerBodyYawTarget;
 	} DT_BasePlayer;
 
 	struct
@@ -53,6 +55,7 @@ struct COffsets
 		int m_bIsScoped;
 		int m_bGunGameImmunity;
 		int m_bHasHelmet;
+		int m_bHasDefuser;
 		int m_flFlashMaxAlpha;
 	} DT_CSPlayer;
 

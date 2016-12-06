@@ -103,6 +103,7 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["Aimbot"]["enabled"] = Settings::Aimbot::enabled;
 	settings["Aimbot"]["silent"] = Settings::Aimbot::silent;
 	settings["Aimbot"]["friendly"] = Settings::Aimbot::friendly;
+	settings["Aimbot"]["no_shoot"] = Settings::Aimbot::no_shoot;
 	settings["Aimbot"]["fov"] = Settings::Aimbot::fov;
 	settings["Aimbot"]["errorMargin"] = Settings::Aimbot::errorMargin;
 	settings["Aimbot"]["bone"] = Settings::Aimbot::bone;
@@ -142,9 +143,10 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["AntiAim"]["enabled_Y"] = Settings::AntiAim::enabled_Y;
 	settings["AntiAim"]["enabled_X"] = Settings::AntiAim::enabled_X;
 	settings["AntiAim"]["type_Y"] = Settings::AntiAim::type_Y;
+	settings["AntiAim"]["type_fake_Y"] = Settings::AntiAim::type_fake_Y;
 	settings["AntiAim"]["type_X"] = Settings::AntiAim::type_X;
-	settings["AntiAim"]["HeadHider"]["enabled"] = Settings::AntiAim::HeadHider::enabled;
-	settings["AntiAim"]["HeadHider"]["distance"] = Settings::AntiAim::HeadHider::distance;
+	settings["AntiAim"]["HeadEdge"]["enabled"] = Settings::AntiAim::HeadEdge::enabled;
+	settings["AntiAim"]["HeadEdge"]["distance"] = Settings::AntiAim::HeadEdge::distance;
 
 	settings["ESP"]["enabled"] = Settings::ESP::enabled;
 
@@ -162,6 +164,7 @@ void Settings::LoadDefaultsOrSave(Config config)
 	LoadColor(settings["ESP"]["Glow"]["enemy_visible_color"], Settings::ESP::Glow::enemy_visible_color);
 	LoadColor(settings["ESP"]["Glow"]["weapon_color"], Settings::ESP::Glow::weapon_color);
 	LoadColor(settings["ESP"]["Glow"]["grenade_color"], Settings::ESP::Glow::grenade_color);
+	LoadColor(settings["ESP"]["Glow"]["defuser_color"], Settings::ESP::Glow::defuser_color);
 	settings["ESP"]["Tracer"]["enabled"] = Settings::ESP::Tracer::enabled;
 	settings["ESP"]["Tracer"]["type"] = Settings::ESP::Tracer::type;
 	settings["ESP"]["Walls"]["enabled"] = Settings::ESP::Walls::enabled;
@@ -182,6 +185,7 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["ESP"]["Chams"]["Arms"]["enabled"] = Settings::ESP::Chams::Arms::enabled;
 	settings["ESP"]["Chams"]["Arms"]["type"] = Settings::ESP::Chams::Arms::type;
 	LoadColor(settings["ESP"]["Chams"]["players_ally_color"], Settings::ESP::Chams::players_ally_color);
+	LoadColor(settings["ESP"]["Chams"]["players_ally_visible_color"], Settings::ESP::Chams::players_ally_visible_color);
 	LoadColor(settings["ESP"]["Chams"]["players_enemy_color"], Settings::ESP::Chams::players_enemy_color);
 	LoadColor(settings["ESP"]["Chams"]["players_enemy_visible_color"], Settings::ESP::Chams::players_enemy_visible_color);
 	LoadColor(settings["ESP"]["Chams"]["Arms"]["color"], Settings::ESP::Chams::Arms::color);
@@ -200,6 +204,7 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["BHop"]["enabled"] = Settings::BHop::enabled;
 
 	settings["AutoStrafe"]["enabled"] = Settings::AutoStrafe::enabled;
+	settings["AutoStrafe"]["type"] = Settings::AutoStrafe::type;
 
 	settings["Noflash"]["enabled"] = Settings::Noflash::enabled;
 	settings["Noflash"]["value"] = Settings::Noflash::value;
@@ -242,6 +247,7 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["ClanTagChanger"]["value"] = Settings::ClanTagChanger::value;
 	settings["ClanTagChanger"]["enabled"] = Settings::ClanTagChanger::enabled;
 	settings["ClanTagChanger"]["animation"] = Settings::ClanTagChanger::animation;
+	settings["ClanTagChanger"]["type"] = Settings::ClanTagChanger::type;
 
 	settings["View"]["NoPunch"]["enabled"] = Settings::View::NoPunch::enabled;
 
@@ -254,6 +260,8 @@ void Settings::LoadDefaultsOrSave(Config config)
 	settings["FakeLag"]["enabled"] = Settings::FakeLag::enabled;
 
 	settings["AutoAccept"]["enabled"] = Settings::AutoAccept::enabled;
+
+	settings["Resolver"]["enabled"] = Settings::Resolver::enabled;
 
 	std::ofstream(config.GetMainConfigFile()) << styledWriter.write(settings);
 }
@@ -291,6 +299,7 @@ void Settings::LoadConfig(Config config)
 	GetBool(settings["Aimbot"]["friendly"], &Settings::Aimbot::friendly);
 	GetFloat(settings["Aimbot"]["fov"], &Settings::Aimbot::fov);
 	GetFloat(settings["Aimbot"]["errorMargin"], &Settings::Aimbot::errorMargin);
+	GetBool(settings["Aimbot"]["no_shoot"], &Settings::Aimbot::no_shoot);
 	GetInt(settings["Aimbot"]["bone"], &Settings::Aimbot::bone);
 	GetButtonCode(settings["Aimbot"]["aimkey"], &Settings::Aimbot::aimkey);
 	GetBool(settings["Aimbot"]["aimkey_only"], &Settings::Aimbot::aimkey_only);
@@ -328,9 +337,10 @@ void Settings::LoadConfig(Config config)
 	GetBool(settings["AntiAim"]["enabled_Y"], &Settings::AntiAim::enabled_Y);
 	GetBool(settings["AntiAim"]["enabled_X"], &Settings::AntiAim::enabled_X);
 	GetInt(settings["AntiAim"]["type_Y"], &Settings::AntiAim::type_Y);
+	GetInt(settings["AntiAim"]["type_fake_Y"], &Settings::AntiAim::type_fake_Y);
 	GetInt(settings["AntiAim"]["type_X"], &Settings::AntiAim::type_X);
-	GetBool(settings["AntiAim"]["HeadHider"]["enabled"], &Settings::AntiAim::HeadHider::enabled);
-	GetFloat(settings["AntiAim"]["HeadHider"]["distance"], &Settings::AntiAim::HeadHider::distance);
+	GetBool(settings["AntiAim"]["HeadEdge"]["enabled"], &Settings::AntiAim::HeadEdge::enabled);
+	GetFloat(settings["AntiAim"]["HeadEdge"]["distance"], &Settings::AntiAim::HeadEdge::distance);
 
 	GetBool(settings["ESP"]["enabled"], &Settings::ESP::enabled);
 	GetColor(settings["ESP"]["ally_color"], &Settings::ESP::ally_color);
@@ -347,6 +357,7 @@ void Settings::LoadConfig(Config config)
 	GetColor(settings["ESP"]["Glow"]["enemy_visible_color"], &Settings::ESP::Glow::enemy_visible_color);
 	GetColor(settings["ESP"]["Glow"]["weapon_color"], &Settings::ESP::Glow::weapon_color);
 	GetColor(settings["ESP"]["Glow"]["grenade_color"], &Settings::ESP::Glow::grenade_color);
+	GetColor(settings["ESP"]["Glow"]["defuser_color"], &Settings::ESP::Glow::defuser_color);
 	GetBool(settings["ESP"]["Tracer"]["enabled"], &Settings::ESP::Tracer::enabled);
 	GetInt(settings["ESP"]["Tracer"]["type"], &Settings::ESP::Tracer::type);
 	GetBool(settings["ESP"]["Walls"]["enabled"], &Settings::ESP::Walls::enabled);
@@ -367,6 +378,7 @@ void Settings::LoadConfig(Config config)
 	GetBool(settings["ESP"]["Chams"]["Arms"]["enabled"], &Settings::ESP::Chams::Arms::enabled);
 	GetInt(settings["ESP"]["Chams"]["Arms"]["type"], &Settings::ESP::Chams::Arms::type);
 	GetColor(settings["ESP"]["Chams"]["players_ally_color"], &Settings::ESP::Chams::players_ally_color);
+	GetColor(settings["ESP"]["Chams"]["players_ally_visible_color"], &Settings::ESP::Chams::players_ally_visible_color);
 	GetColor(settings["ESP"]["Chams"]["players_enemy_color"], &Settings::ESP::Chams::players_enemy_color);
 	GetColor(settings["ESP"]["Chams"]["players_enemy_visible_color"], &Settings::ESP::Chams::players_enemy_visible_color);
 	GetColor(settings["ESP"]["Chams"]["Arms"]["color"], &Settings::ESP::Chams::Arms::color);
@@ -385,6 +397,7 @@ void Settings::LoadConfig(Config config)
 	GetBool(settings["BHop"]["enabled"], &Settings::BHop::enabled);
 
 	GetBool(settings["AutoStrafe"]["enabled"], &Settings::AutoStrafe::enabled);
+	GetInt(settings["AutoStrafe"]["type"], &Settings::AutoStrafe::type);
 
 	GetBool(settings["Noflash"]["enabled"], &Settings::Noflash::enabled);
 	GetFloat(settings["Noflash"]["value"], &Settings::Noflash::value);
@@ -449,6 +462,7 @@ void Settings::LoadConfig(Config config)
 	GetString(settings["ClanTagChanger"]["value"], &Settings::ClanTagChanger::value);
 	GetBool(settings["ClanTagChanger"]["enabled"], &Settings::ClanTagChanger::enabled);
 	GetBool(settings["ClanTagChanger"]["animation"], &Settings::ClanTagChanger::animation);
+	GetInt(settings["ClanTagChanger"]["type"], &Settings::ClanTagChanger::type);
 
 	GetBool(settings["View"]["NoPunch"]["enabled"], &Settings::View::NoPunch::enabled);
 
@@ -461,6 +475,8 @@ void Settings::LoadConfig(Config config)
 	GetBool(settings["FakeLag"]["enabled"], &Settings::FakeLag::enabled);
 
 	GetBool(settings["AutoAccept"]["enabled"], &Settings::AutoAccept::enabled);
+
+	GetBool(settings["Resolver"]["enabled"], &Settings::Resolver::enabled);
 }
 
 void Settings::LoadSettings ()
@@ -483,30 +499,30 @@ void remove_directory(const char* path)
 {
 	DIR* dir;
 	dirent* pdir;
-	
+
 	dir = opendir(path);
-	
+
 	while ((pdir = readdir(dir)))
 	{
 		if (strcmp(pdir->d_name, ".") == 0 || strcmp(pdir->d_name, "..") == 0)
 			continue;
-		
+
 		if (pdir->d_type == DT_DIR)
 		{
 			pstring _dir;
 			_dir << path << "/" << pdir->d_name;
-			
+
 			remove_directory(_dir.c_str());
 		}
 		else if (pdir->d_type == DT_REG)
 		{
 			pstring file;
 			file << path << "/" << pdir->d_name;
-			
+
 			unlink(file.c_str());
 		}
 	}
-	
+
 	rmdir(path);
 }
 

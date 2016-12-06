@@ -104,6 +104,11 @@ public:
 	{
 		return *(int*)((uintptr_t)this + offsets.DT_CSPlayer.m_bHasHelmet);
 	}
+
+	int HasDefuser()
+	{
+		return *(int*)((uintptr_t)this + offsets.DT_CSPlayer.m_bHasDefuser);
+	}
 	
 	int GetTeam()
 	{
@@ -216,10 +221,20 @@ public:
 	{
 		return (char*)((uintptr_t)this + offsets.DT_BasePlayer.m_szLastPlaceName);
 	}
-	
+
 	Vector GetVelocity()
 	{
 		return *(Vector*)((uintptr_t)this + offsets.DT_BasePlayer.m_vecVelocity);
+	}
+
+	QAngle* GetHeadRotation()
+	{
+		return (QAngle*)((uintptr_t)this + offsets.DT_BasePlayer.m_angRotation);
+	}
+
+	float* GetLowerBodyYawTarget()
+	{
+		return (float*)((uintptr_t)this + offsets.DT_BasePlayer.m_flLowerBodyYawTarget);
 	}
 };
 
@@ -406,6 +421,11 @@ public:
 			default:
 				return false;
 		}
+	}
+
+	bool IsBomb()
+	{
+		return *this->GetItemDefinitionIndex() == WEAPON_C4;
 	}
 
 	bool CanScope()

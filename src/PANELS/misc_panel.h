@@ -13,6 +13,7 @@ private:
 	Banner* ba_movement;
 	ToggleSwitch* ts_bhop;
 	ToggleSwitch* ts_autostrafe;
+	ComboBox<AutostrafeType >* cb_autostrafetype;
 	ToggleSwitch* ts_airstuck;
 	KeyBind* kb_airstuck_key;
 	ToggleSwitch* ts_teleport;
@@ -49,12 +50,15 @@ private:
 	OutlinedButton* bn_ui_color;
 	OutlinedButton* bn_2_color;
 	OutlinedButton* bn_3_color;
+	Banner* ba_clantag;
+	ComboBox<ClanTagType>* cb_clantag_type;
 
 public:
 	MiscPanel (Vector2D position, Vector2D size);
-	
+
 	void bn_ui_color_clicked ();
 	void ob_nickname_clicked ();
 	void ob_noname_clicked ();
 	void ob_unlockcvar_clicked ();
+	void ts_clantag_animation_clicked();
 };

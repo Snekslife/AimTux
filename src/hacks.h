@@ -6,6 +6,7 @@
 #include "bhop.h"
 #include "chams.h"
 #include "clantagchanger.h"
+#include "customglow.h"
 #include "dlights.h"
 #include "esp.h"
 #include "fakelag.h"
@@ -22,3 +23,4 @@
 #include "spammer.h"
 #include "teleport.h"
 #include "triggerbot.h"
+#include "resolver.h"

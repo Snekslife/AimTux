@@ -1,3 +1,4 @@
+#include <math.h>
 #include "esp.h"
 #include "settings.h"
 
@@ -14,6 +15,7 @@ Color Settings::ESP::Glow::enemy_color = Color(200, 0, 50, 0);
 Color Settings::ESP::Glow::enemy_visible_color = Color(200, 200, 50, 0);
 Color Settings::ESP::Glow::weapon_color = Color(200, 0, 50, 200);
 Color Settings::ESP::Glow::grenade_color = Color(200, 0, 50, 200);
+Color Settings::ESP::Glow::defuser_color = Color(100, 100, 200, 200);
 bool Settings::ESP::visibility_check = false;
 bool Settings::ESP::show_scope_border = true;
 bool Settings::ESP::Walls::enabled = false;
@@ -42,6 +44,28 @@ Vector2D WorldToScreen(const Vector &vOrigin)
 	Vector vec;
 	debugOverlay->ScreenPosition(vOrigin, vec);
 	return LOC(vec.x, vec.y);
+}
+
+//credits to Casual_Hacker from UC for this method (I modified it a lil bit)
+float GetArmourHealth(float flDamage, int ArmorValue)
+{
+	float flCurDamage = flDamage;
+
+	if (flCurDamage == 0.0f || ArmorValue == 0)
+		return flCurDamage;
+
+	float flArmorRatio = 0.5f;
+	float flArmorBonus = 0.5f;
+	float flNew = flCurDamage * flArmorRatio;
+	float flArmor = (flCurDamage - flNew) * flArmorBonus;
+
+	if (flArmor > ArmorValue)
+	{
+		flArmor = ArmorValue * (1.0f / flArmorBonus);
+		flNew = flCurDamage - flArmor;
+	}
+
+	return flNew;
 }
 
 void DrawESPBox(Vector vecOrigin, Vector vecViewOffset, Color color, int width, int additionalHeight)
@@ -273,13 +297,18 @@ void ESP::DrawFOVCrosshair()
 	int width, height;
 	engine->GetScreenSize(width, height);
 
-	Draw::DrawCircle(LOC(width / 2, height / 2), 20, Settings::Aimbot::fov / 90 * width / 2, Color(255, 100, 100, 255));
+	float radAimbotFov = Settings::Aimbot::fov * M_PI / 180;
+	float radViewFov = RenderView::currentFOV * M_PI / 180;
+
+	float circleRadius = tanf(radAimbotFov / 2) / tanf(radViewFov / 2) * width;
+
+	Draw::DrawCircle(LOC(width / 2, height / 2), 20, circleRadius, Color(255, 100, 100, 255));
 }
 
 void ESP::DrawBombBox(C_BasePlantedC4* entity)
 {
+	C_BasePlayer* localplayer = (C_BasePlayer*)entitylist->GetClientEntity(engine->GetLocalPlayer());
 	Color color = Settings::ESP::bomb_color;
-	Color colorText = entity->GetBombDefuser() != -1 ? Color(0, 50, 200) : Color(255, 255, 255);
 
 	int width = 7;
 	int additionalHeight = 4;
@@ -290,12 +319,33 @@ void ESP::DrawBombBox(C_BasePlantedC4* entity)
 
 	pstring str = "C4";
 
+	float flDistance = sqrt(localplayer->GetEyePosition().DistToSqr(vecOrigin));
+
+	float a = 450.7f;
+	float b = 75.68f;
+	float c = 789.2f;
+	float d = ((flDistance - b) / c);
+	float flDamage = a*exp(-d * d);
+
+	float damage = std::max((int)ceilf(GetArmourHealth(flDamage, localplayer->GetArmor())), 0);
+
+	bool surviveBlast = localplayer->GetHealth() > damage;
+
+	if (surviveBlast && damage == 1.f)
+		damage = 0.0f;
+
 	if (bombTime > 0)
-		str << " (" << bombTime << ")";
+	{
+		if (localplayer->GetAlive())
+			str << " (" << bombTime << ", " << damage << " damage)";
+		else
+			str << " (" << bombTime << ")";
+	}
 
 	Vector s_veclocalplayer_s;
 	if (!WorldToScreen(vecOrigin, s_veclocalplayer_s))
 	{
+		Color colorText = entity->GetBombDefuser() != -1 ? Color(0, 50, 200) : surviveBlast ? Color(0, 255, 0) : Color(255, 0, 0);
 		DrawESPBox(vecOrigin, vecViewOffset, color, width, additionalHeight);
 		Draw::DrawCenteredString(str.c_str(), LOC(s_veclocalplayer_s.x, s_veclocalplayer_s.y), colorText, esp_font);
 	}
@@ -320,31 +370,30 @@ void ESP::DrawWeaponText(C_BaseEntity* entity, ClientClass* client)
 
 void ESP::DrawGlow()
 {
-	static CGlowObjectManager* glow_object_mgr = GlowObjectManager();
-
 	C_BasePlayer* localplayer = (C_BasePlayer*)entitylist->GetClientEntity(engine->GetLocalPlayer());
 	if (!localplayer)
 		return;
 
-	for (int i = 0; i < glow_object_mgr->max_size; i++) {
-		auto glow_object = &glow_object_mgr->m_GlowObjectDefinitions[i];
+	for (int i = 0; i < glowmanager->m_GlowObjectDefinitions.Count(); i++) {
+		GlowObjectDefinition_t& glow_object = glowmanager->m_GlowObjectDefinitions[i];
 
-		if (!glow_object || glow_object->m_nNextFreeSlot != ENTRY_IN_USE || !glow_object->m_pEntity)
+		if (glow_object.IsUnused() || !glow_object.m_pEntity)
 			continue;
 
 		Color color;
-		ClientClass* client = glow_object->m_pEntity->GetClientClass();
+		ClientClass* client = glow_object.m_pEntity->GetClientClass();
+		bool should_glow = true;
 
 		if (client->m_ClassID == CCSPlayer)
 		{
-			if (glow_object->m_pEntity == (C_BaseEntity*)localplayer
-				|| glow_object->m_pEntity->GetDormant()
-				|| !glow_object->m_pEntity->GetAlive())
+			if (glow_object.m_pEntity == (C_BaseEntity*)localplayer
+				|| glow_object.m_pEntity->GetDormant()
+				|| !glow_object.m_pEntity->GetAlive())
 				continue;
 
-			if (glow_object->m_pEntity->GetTeam() != localplayer->GetTeam())
+			if (glow_object.m_pEntity->GetTeam() != localplayer->GetTeam())
 			{
-				if (Entity::IsVisible(glow_object->m_pEntity, BONE_HEAD))
+				if (Entity::IsVisible(glow_object.m_pEntity, BONE_HEAD))
 					color = Settings::ESP::Glow::enemy_visible_color;
 				else
 					color = Settings::ESP::Glow::enemy_color;
@@ -364,14 +413,23 @@ void ESP::DrawGlow()
 		{
 			color = Settings::ESP::Glow::grenade_color;
 		}
+		else if (client->m_ClassID == CBaseAnimating)
+		{
+			color = Settings::ESP::Glow::defuser_color;
 
-		glow_object->m_flGlowColor[0] = color.r / 255.0f;
-		glow_object->m_flGlowColor[1] = color.g / 255.0f;
-		glow_object->m_flGlowColor[2] = color.b / 255.0f;
-		glow_object->m_flGlowAlpha = color.a / 255.0f;
-		glow_object->m_flBloomAmount = 1.0f;
-		glow_object->m_bRenderWhenOccluded = true;
-		glow_object->m_bRenderWhenUnoccluded = false;
+			if (localplayer->HasDefuser() || localplayer->GetTeam() == TEAM_TERRORIST)
+				should_glow = false;
+		}
+
+		should_glow = should_glow && color.a > 0;
+
+		glow_object.m_flGlowColor[0] = color.r / 255.0f;
+		glow_object.m_flGlowColor[1] = color.g / 255.0f;
+		glow_object.m_flGlowColor[2] = color.b / 255.0f;
+		glow_object.m_flGlowAlpha = should_glow ? color.a / 255.0f : 255.0f;
+		glow_object.m_flBloomAmount = 1.0f;
+		glow_object.m_bRenderWhenOccluded = should_glow;
+		glow_object.m_bRenderWhenUnoccluded = false;
 	}
 }
 

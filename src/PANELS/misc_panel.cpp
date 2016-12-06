@@ -1,4 +1,5 @@
 #include "misc_panel.h"
+#include "../clantagchanger.h"
 
 MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	: Panel::Panel (position, size)
@@ -6,8 +7,16 @@ MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	ba_movement = new Banner ("Movement", LOC (10, 10), (size.x - 20) / 2 - 5);
 	ts_bhop = new ToggleSwitchTip ("Bunny Hop", BELOW (ba_movement), LOC((size.x - 20) / 6.75, 30), &Settings::BHop::enabled, "Enables or disables auto bunny hopping");
 	ts_autostrafe = new ToggleSwitchTip ("Auto Strafe", STACK (ts_bhop), LOC((size.x - 20) / 6.75, 30), &Settings::AutoStrafe::enabled, "Auto strafe when bunny hopping");
-	ts_airstuck = new ToggleSwitchTip ("Air Stuck", BELOW (ts_bhop), LOC((size.x - 20) / 6.75, 30), &Settings::Airstuck::enabled, "Freezes you in place. Can be used to teleport");
-	kb_airstuck_key =  new KeyBind ("", STACK (ts_airstuck), LOC((size.x - 20) / 6.75, 30),  &Settings::Airstuck::key);
+	cb_autostrafetype = new ComboBox<AutostrafeType> ("Autostrafe Type", STACK (ts_autostrafe), (size.x - 20) / 6.75, &Settings::AutoStrafe::type, std::vector<CB_Element>
+			{
+					CB_Element ("FORWARDS", AS_FORWARDS),
+					CB_Element ("BACKWARDS", AS_BACKWARDS),
+					CB_Element ("LEFT SIDEWAYS", AS_LEFTSIDEWAYS),
+					CB_Element ("RIGHT SIDEWAYS", AS_RIGHTSIDEWAYS)
+			}, false
+	);
+	ts_airstuck = new ToggleSwitchTip ("AirStuck", BELOW (ts_bhop), LOC((size.x - 20) / 6.75, 30), &Settings::Airstuck::enabled, "Freezes you in place. Can be used to teleport");
+	kb_airstuck_key =  new KeyBind ("AirStuck Key:", STACK (ts_airstuck), LOC((size.x - 20) / 3.29, 30),  &Settings::Airstuck::key);
 #ifdef UNTRUSTED_SETTINGS
 	ts_teleport = new ToggleSwitchTip ("Teleport", BELOW (ts_airstuck), LOC((size.x - 20) / 6.75, 30), &Settings::Teleport::enabled, "Teleport. DON'T USE ON VALVE SERVERS (Casual/Deathmatch/Matchmaking");
 	kb_teleport_key =  new KeyBind ("", STACK (ts_teleport), LOC((size.x - 20) / 6.75, 30),  &Settings::Teleport::key);
@@ -34,21 +43,30 @@ MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	ts_autoaccept = new ToggleSwitchTip ("Auto Accept", BELOW (ts_radar), LOC((size.x - 20) / 6.75, 30), &Settings::AutoAccept::enabled, "Automatically accept games when in the matchmaking queue.");
 	ts_showranks = new ToggleSwitchTip ("Show Ranks", BELOW (ts_autoaccept), LOC((size.x - 20) / 6.75, 30), &Settings::ShowRanks::enabled, "Shows peoples ranks in a valve server");
 	ts_showspectators = new ToggleSwitchTip ("Show Spectators", STACK (ts_showranks), LOC((size.x - 20) / 6.75, 30), &Settings::ShowSpectators::enabled, "Shows who is spectating you");
-	ts_clantag = new ToggleSwitchTip ("Custom Clantag", BELOW (ts_showranks), LOC((size.x - 20) / 6.75, 30), &Settings::ClanTagChanger::enabled, "Set a custom clantag ");
-	tb_clantag = new TextBox ("Clantag", &Settings::ClanTagChanger::value, STACK (ts_clantag), LOC((size.x - 20) / 6.75, 30));
-	ts_clantag_animation = new ToggleSwitchTip ("Clantag Animation", BELOW (ts_clantag), LOC((size.x - 20) / 6.75, 30), &Settings::ClanTagChanger::animation, "Animates the clantag. Can be changed in the config");
-	vtb_nickname = new ValueTextBox ("Nickname", "", BELOW (ts_clantag_animation), LOC((size.x - 20) / 6.75, 30));
+	ba_clantag = new Banner("Clantag Settings", BELOW(ts_normal_spammer), (size.x - 20) / 2 - 5);
+	ts_clantag = new ToggleSwitchTip ("Custom Clantag", BELOW (ba_clantag), LOC((size.x - 20) / 6.75, 30), &Settings::ClanTagChanger::enabled, "Set a custom clantag ");
+	tb_clantag = new TextBox ("Clantag", &Settings::ClanTagChanger::value, STACK (ts_clantag), LOC((size.x - 20) / 3.29, 30));
+	ts_clantag_animation = new ToggleSwitchTip ("Animate", BELOW (ts_clantag), LOC((size.x - 20) / 6.75, 30), &Settings::ClanTagChanger::animation, "Animates the clantag. Can be changed in the config");
+	ts_clantag_animation->onMouseClickEndEvent = MFUNC(&MiscPanel::ts_clantag_animation_clicked, this);
+	cb_clantag_type = new ComboBox<ClanTagType>("clantag type", STACK (ts_clantag_animation), (size.x - 20) / 6.75, &Settings::ClanTagChanger::type, std::vector<CB_Element>
+			{
+				CB_Element ("Marquee", MARQUEE),
+				CB_Element ("Words", WORDS),
+				CB_Element ("Letters", LETTERS)
+			}, false
+	);
+	vtb_nickname = new ValueTextBox ("Nickname", "", BELOW (ts_showranks), LOC((size.x - 20) / 6.75, 30));
 	ob_nickname = new OutlinedButton ("Set Nickname", STACK (vtb_nickname), LOC((size.x - 20) / 6.75, 30));
 	ob_nickname->OnClickedEvent = MFUNC (&MiscPanel::ob_nickname_clicked, this);
-	ob_noname = new OutlinedButton ("No Name", BELOW (vtb_nickname), LOC((size.x - 20) / 6.75, 30));
+	ob_noname = new OutlinedButton ("No Name", STACK (ob_nickname), LOC((size.x - 20) / 6.75, 30));
 	ob_noname->OnClickedEvent = MFUNC (&MiscPanel::ob_noname_clicked, this);
 #ifdef UNTRUSTED_SETTINGS
-	vtb_unlockcvar = new ValueTextBox ("CVar", "", BELOW (ob_noname), LOC((size.x - 20) / 6.75, 30));
+	vtb_unlockcvar = new ValueTextBox ("CVar", "", BELOW (vtb_nickname), LOC((size.x - 20) / 6.75, 30));
 	ob_unlockcvar = new OutlinedButton ("Unlock CVar", STACK (vtb_unlockcvar), LOC((size.x - 20) / 6.75, 30));
 	ob_unlockcvar->OnClickedEvent = MFUNC (&MiscPanel::ob_unlockcvar_clicked, this);
 	ba_colors = new Banner ("Colors", BELOW (vtb_unlockcvar), (size.x - 20) / 2 - 5);
 #else
-	ba_colors = new Banner ("Colors", BELOW (ob_noname), (size.x - 20) / 2 - 5);
+	ba_colors = new Banner ("Colors", BELOW (vtb_nickname), (size.x - 20) / 2 - 5);
 #endif
 	int x_wide = ba_colors->size.x / 4;
 	bn_ui_color = new OutlinedButton ("Main UI", BELOW (ba_colors), LOC((size.x - 20) / 6.75, 30));
@@ -68,9 +86,6 @@ MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	AddComponent (vtb_unlockcvar);
 	AddComponent (ob_unlockcvar);
 #endif
-	AddComponent (ts_clantag_animation);
-	AddComponent (tb_clantag);
-	AddComponent (ts_clantag);
 	AddComponent (ts_showspectators);
 	AddComponent (ts_showranks);
 	AddComponent (ts_radar);
@@ -84,6 +99,11 @@ MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	AddComponent (sl_noflash_value);
 	AddComponent (ts_noflash);
 	AddComponent (ba_other);
+	AddComponent (cb_clantag_type);
+	AddComponent (ts_clantag_animation);
+	AddComponent (tb_clantag);
+	AddComponent (ts_clantag);
+	AddComponent (ba_clantag);
 	AddComponent (ts_normal_spammer_say_team);
 	AddComponent (ts_normal_spammer);
 	AddComponent (ts_kill_spammer_say_team);
@@ -98,6 +118,7 @@ MiscPanel::MiscPanel (Vector2D position, Vector2D size)
 	AddComponent(kb_airstuck_key);
 	AddComponent (ts_airstuck);
 	AddComponent (ts_autostrafe);
+	AddComponent (cb_autostrafetype);
 	AddComponent (ts_bhop);
 	AddComponent (ba_movement);
 
@@ -142,5 +163,22 @@ void MiscPanel::bn_ui_color_clicked ()
 	else
 	{
 		wn_pop_color->Destroy ();
+	}
+}
+
+void MiscPanel::ts_clantag_animation_clicked()
+{
+	Settings::ClanTagChanger::animation = !Settings::ClanTagChanger::animation;
+	switch(Settings::ClanTagChanger::type)
+	{
+		case MARQUEE:
+			ClanTagChanger::animations[0] = ClanTagChanger::Marquee("CUSTOM", Settings::ClanTagChanger::value);
+			break;
+		case WORDS:
+			ClanTagChanger::animations[0] = ClanTagChanger::Words("CUSTOM", Settings::ClanTagChanger::value);
+			break;
+		case LETTERS:
+			ClanTagChanger::animations[0] = ClanTagChanger::Letters("CUSTOM", Settings::ClanTagChanger::value);
+			break;
 	}
 }

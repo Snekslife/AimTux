@@ -20,6 +20,8 @@ void Offsets::getOffsets()
 	offsets.DT_BasePlayer.m_hObserverTarget = NetVarManager::getOffset(tables, "DT_BasePlayer", "m_hObserverTarget");
 	offsets.DT_BasePlayer.m_hViewModel = NetVarManager::getOffset(tables, "DT_BasePlayer", "m_hViewModel[0]");
 	offsets.DT_BasePlayer.m_szLastPlaceName = NetVarManager::getOffset(tables, "DT_BasePlayer", "m_szLastPlaceName");
+	offsets.DT_BasePlayer.m_angRotation = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_angEyeAngles[0]");
+	offsets.DT_BasePlayer.m_flLowerBodyYawTarget = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_flLowerBodyYawTarget");
 
 	offsets.DT_BaseEntity.m_vecOrigin = NetVarManager::getOffset(tables, "DT_BaseEntity", "m_vecOrigin");
 	offsets.DT_BaseEntity.m_nRenderMode = NetVarManager::getOffset(tables, "DT_BaseEntity", "m_nRenderMode");
@@ -41,6 +43,7 @@ void Offsets::getOffsets()
 	offsets.DT_CSPlayer.m_bIsScoped = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_bIsScoped");
 	offsets.DT_CSPlayer.m_bGunGameImmunity = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_bGunGameImmunity");
 	offsets.DT_CSPlayer.m_bHasHelmet = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_bHasHelmet");
+	offsets.DT_CSPlayer.m_bHasDefuser = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_bHasDefuser");
 	offsets.DT_CSPlayer.m_flFlashMaxAlpha = NetVarManager::getOffset(tables, "DT_CSPlayer", "m_flFlashMaxAlpha");
 
 	offsets.DT_BaseAttributableItem.m_iItemDefinitionIndex = NetVarManager::getOffset(tables, "DT_BaseAttributableItem", "m_iItemDefinitionIndex");

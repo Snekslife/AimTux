@@ -25,18 +25,31 @@ enum TracerType : unsigned int
 	CURSOR
 };
 
+enum ClanTagType : unsigned int
+{
+	MARQUEE,
+	WORDS,
+	LETTERS
+};
+
+enum AutostrafeType : unsigned int
+{
+	AS_FORWARDS,
+	AS_BACKWARDS,
+	AS_LEFTSIDEWAYS,
+	AS_RIGHTSIDEWAYS
+};
+
 enum AntiAimType_Y : unsigned int
 {
-	SPIN_FAST,
 	SPIN_SLOW,
+	SPIN_FAST,
 	JITTER,
 	SIDE,
 	BACKWARDS,
-	FAKE4,
-	BACKWARDS_FAKE,
-	SIDE_FLIP_FAKE,
-	SIDE_FAKE_LEFT,
-	SIDE_FAKE_RIGHT
+	FORWARDS,
+	LEFT,
+	RIGHT
 };
 
 enum AntiAimType_X : unsigned int
@@ -44,7 +57,8 @@ enum AntiAimType_X : unsigned int
 	STATIC_UP,
 	STATIC_DOWN,
 	STATIC_UP_FAKE,
-	STATIC_DOWN_FAKE
+	STATIC_DOWN_FAKE,
+	DANCE
 };
 
 enum ChamsType : unsigned int
@@ -65,6 +79,13 @@ enum ArmsType : unsigned int
 	WIREFRAME,
 	NONE,
 	DEFAULT
+};
+
+enum AimTargetType : unsigned int
+{
+	FOV,
+	DISTANCE,
+	HP
 };
 
 namespace Settings
@@ -116,6 +137,7 @@ namespace Settings
 		extern unsigned int bone;
 		extern ButtonCode_t aimkey;
 		extern bool aimkey_only;
+		extern bool no_shoot;
 
 		namespace Smooth
 		{
@@ -203,9 +225,10 @@ namespace Settings
 		extern bool enabled_Y;
 		extern bool enabled_X;
 		extern AntiAimType_Y type_Y;
+		extern AntiAimType_Y type_fake_Y;
 		extern AntiAimType_X type_X;
 
-		namespace HeadHider
+		namespace HeadEdge
 		{
 			extern bool enabled;
 			extern float distance;
@@ -232,6 +255,7 @@ namespace Settings
 			extern Color enemy_visible_color;
 			extern Color weapon_color;
 			extern Color grenade_color;
+			extern Color defuser_color;
 		}
 
 		namespace Tracer
@@ -334,6 +358,7 @@ namespace Settings
 	namespace AutoStrafe
 	{
 		extern bool enabled;
+		extern AutostrafeType type;
 	}
 
 	namespace Noflash
@@ -412,6 +437,7 @@ namespace Settings
 		extern std::string value;
 		extern bool animation;
 		extern bool enabled;
+		extern ClanTagType type;
 	}
 
 	namespace View
@@ -441,6 +467,11 @@ namespace Settings
 	}
 
 	namespace AutoAccept
+	{
+		extern bool enabled;
+	}
+
+	namespace Resolver
 	{
 		extern bool enabled;
 	}

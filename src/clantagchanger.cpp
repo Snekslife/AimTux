@@ -3,44 +3,66 @@
 
 std::string Settings::ClanTagChanger::value = "";
 bool Settings::ClanTagChanger::animation = false;
-bool Settings::ClanTagChanger::enabled = false; // TODO find a way to go back to the "official" clan tag for the player?
+bool Settings::ClanTagChanger::enabled = false; // TODO find a way to go back to the "official" clan tag for the player? -- Save the current clan tag, before editing, then restore it later
+ClanTagType Settings::ClanTagChanger::type = MARQUEE;
+
+ClanTagChanger::Animation ClanTagChanger::Marquee(std::string name, std::string text, int width /*= 15*/, int speed /*= 650*/)
+{
+	// Outputs cool scrolling text animation
+
+	char empty = '_';
+	std::replace(text.begin(), text.end(), ' ', empty);
+
+	std::string cropString = std::string(width, empty) + text + std::string(width - 1, empty);
+
+	std::vector<ClanTagChanger::Frame> frames;
+	for (int i = 0; i < text.length() + width; i++)
+		frames.push_back(ClanTagChanger::Frame(cropString.substr(i, width + i), speed));
+
+	return ClanTagChanger::Animation(name, frames, ClanTagChanger::ANIM_LOOP);
+}
+
+std::vector<std::string> splitWords(std::string text)
+{
+	std::istringstream stream(text);
+	std::string word;
+	std::vector<std::string> words;
+	while (stream >> word)
+		words.push_back(word);
+
+	return words;
+}
+
+ClanTagChanger::Animation ClanTagChanger::Words(std::string name, std::string text, int speed /*= 1000*/)
+{
+	// Outputs a word by word animation
+
+	std::vector<std::string> words = splitWords(text);
+	std::vector<ClanTagChanger::Frame> frames;
+	for (int i = 0; i < words.size(); i++)
+		frames.push_back(Frame(words[i], speed));
+
+	return ClanTagChanger::Animation(name, frames, ClanTagChanger::ANIM_LOOP);
+}
+
+ClanTagChanger::Animation ClanTagChanger::Letters(std::string name, std::string text, int speed /*= 1000*/)
+{
+	// Outputs a letter incrementing animation
+
+	std::vector<ClanTagChanger::Frame> frames;
+	for (int i = 1; i <= text.length(); i++)
+		frames.push_back(Frame(text.substr(0, i), speed));
+
+	for (int i = text.length() - 2; i > 0; i--)
+		frames.push_back(Frame(frames[i].text, speed));
+
+	return ClanTagChanger::Animation(name, frames, ClanTagChanger::ANIM_LOOP);
+}
 
 std::vector<ClanTagChanger::Animation> ClanTagChanger::animations =
 {
-	Animation ("NOVAC",
-		std::vector<ClanTagChanger::Frame>
-		{
-			Frame ("NO____", 700),
-			Frame ("VAC___", 700),
-			Frame ("ON_____", 850),
-			Frame ("LINUX", 1700),
-			Frame ("______", 600),
-			Frame ("AimTux", 3000),
-			Frame ("______", 700),
-		}, ANIM_LOOP
-	),
-	
-	Animation ("USPINME",
-		std::vector<ClanTagChanger::Frame>
-		{
-			Frame ("You", 700),
-			Frame ("spin", 700),
-			Frame ("me", 700),
-			Frame ("right", 700),
-			Frame ("round,", 700),
-			Frame ("baby", 700),
-			Frame ("right", 700),
-			Frame ("round", 700),
-			Frame ("like", 700),
-			Frame ("a", 700),
-			Frame ("record", 700),
-			Frame ("baby", 700),
-			Frame ("right", 700),
-			Frame ("round", 700),
-			Frame ("_round", 700),
-			Frame ("__round", 800),
-		}, ANIM_LOOP
-	)	
+	ClanTagChanger::Marquee("NOVAC", "NO VAC ON LINUX"),
+	ClanTagChanger::Words("USPINME", "You spin me right round baby right round like a record baby right round _round __round")
 };
 ClanTagChanger::Animation* ClanTagChanger::animation = &ClanTagChanger::animations[0];
 
@@ -69,7 +91,7 @@ void ClanTagChanger::CreateMove(CUserCmd* cmd)
 	{
 		SendClanTag(ClanTagChanger::animation->GetCurrentFrame().text.c_str(), "");
 	}
-	else 
+	else
 	{
 		std::string ctWithEscapesProcessed = std::string(Settings::ClanTagChanger::value);
 		Util::StdReplaceStr(ctWithEscapesProcessed, "\\n", "\n"); // compute time impact? also, referential so i assume RAII builtin cleans it up...
